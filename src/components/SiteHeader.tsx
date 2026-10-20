@@ -16,9 +16,6 @@ export default function SiteHeader() {
           <Link href="/guias" className="hide-sm">
             Guías
           </Link>
-          <Link href="/nueva" className="hide-sm">
-            Publicar
-          </Link>
           <a
             className="cta"
             href={youtubeUrl}

@@ -23,6 +23,7 @@ export default function PanelPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notifyOn, setNotifyOn] = useState(false);
+  const [notifyError, setNotifyError] = useState("");
   const lastIdsRef = useRef<Set<string>>(new Set());
 
   const load = useCallback(
@@ -72,34 +73,76 @@ export default function PanelPage() {
     return () => clearInterval(interval);
   }, [unlocked, code, load]);
 
-  async function enableNotifications() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
     if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
-    const perm = await Notification.requestPermission();
-    if (perm !== "granted") return;
+    if (Notification.permission === "granted") {
+      navigator.serviceWorker.ready
+        .then((reg) => reg.pushManager.getSubscription())
+        .then((sub) => setNotifyOn(Boolean(sub)))
+        .catch(() => undefined);
+    }
+  }, []);
 
-    const reg = await navigator.serviceWorker.register("/sw.js");
-    await navigator.serviceWorker.ready;
+  function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(base64);
+    const buffer = new ArrayBuffer(raw.length);
+    const output = new Uint8Array(buffer);
+    for (let i = 0; i < raw.length; i++) output[i] = raw.charCodeAt(i);
+    return buffer;
+  }
 
-    const keyRes = await fetch("/api/push");
-    const { publicKey } = (await keyRes.json()) as { publicKey: string };
-    if (!publicKey) return;
+  async function enableNotifications() {
+    setNotifyError("");
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+      setNotifyError("Este navegador no soporta notificaciones. En iPhone, instala la app (Compartir > Añadir a pantalla de inicio) y ábrela desde el icono.");
+      return;
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        setNotifyError("Permiso de notificaciones denegado. Actívalo en los ajustes del navegador/sistema para este sitio.");
+        return;
+      }
 
-    const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: publicKey,
-    });
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
 
-    await fetch("/api/push", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(sub.toJSON()),
-    });
+      const keyRes = await fetch("/api/push");
+      const { publicKey } = (await keyRes.json()) as { publicKey: string };
+      if (!publicKey) {
+        setNotifyError("Push no configurado en el servidor (falta VAPID_PUBLIC_KEY).");
+        return;
+      }
 
-    setNotifyOn(true);
-    new Notification("Tueresmigasolina", {
-      body: "Alertas activadas en este dispositivo. Te avisaré de cada propuesta.",
-      icon: "/icons/icon-192.png",
-    });
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+      }
+
+      const save = await fetch("/api/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sub.toJSON()),
+      });
+      if (!save.ok) {
+        setNotifyError("No se pudo guardar la suscripción. Inténtalo de nuevo.");
+        return;
+      }
+
+      setNotifyOn(true);
+      new Notification("Tueresmigasolina", {
+        body: "Alertas activadas en este dispositivo. Te avisaré de cada propuesta.",
+        icon: "/icons/icon-192.png",
+      });
+    } catch (err) {
+      setNotifyError(`Error al activar: ${err instanceof Error ? err.message : "desconocido"}`);
+    }
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -147,22 +190,34 @@ export default function PanelPage() {
         </form>
       )}
 
+      <div className="panel" style={{ marginTop: "1rem", maxWidth: "36rem" }}>
+        <strong style={{ display: "block", marginBottom: "0.4rem" }}>
+          🔔 Alertas en este dispositivo
+        </strong>
+        <p style={{ color: "var(--muted)", fontSize: "0.95rem", marginBottom: "0.7rem" }}>
+          Actívalas para que te llegue una notificación al móvil cada vez que alguien
+          proponga una ruta. Solo hay que hacerlo una vez en cada dispositivo.
+        </p>
+        {notifyOn ? (
+          <span className="chip accent">Alertas activas en este dispositivo</span>
+        ) : (
+          <button className="btn primary" type="button" onClick={enableNotifications}>
+            Activar alertas en este dispositivo
+          </button>
+        )}
+        {notifyError && (
+          <p style={{ color: "#ff6b6b", marginTop: "0.6rem", fontSize: "0.9rem" }}>
+            {notifyError}
+          </p>
+        )}
+      </div>
+
       {unlocked && (
         <>
           <div className="actions" style={{ marginTop: "1rem", flexWrap: "wrap" }}>
             <button className="btn ghost" onClick={() => load(code)} disabled={loading}>
               {loading ? "Actualizando..." : "Actualizar ahora"}
             </button>
-            {!notifyOn && "Notification" in window && Notification.permission !== "granted" && (
-              <button className="btn primary" onClick={enableNotifications}>
-                Activar alertas en este dispositivo
-              </button>
-            )}
-            {notifyOn && (
-              <span className="chip accent" style={{ alignSelf: "center" }}>
-                Alertas activas
-              </span>
-            )}
             <button
               className="btn ghost"
               onClick={() => {

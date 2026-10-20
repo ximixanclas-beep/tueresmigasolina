@@ -7,7 +7,7 @@ Web app instalable (PWA) para publicar y compartir rutas en moto con mapa, datos
 - **Datos:** Supabase (producción) o archivo local `.data/routes.json` (desarrollo)
 - **SEO:** metadata dinámica, sitemap, robots, JSON-LD, Open Graph e imagen OG generada
 - **PWA:** manifest, service worker, instalación desde el navegador
-- **Alertas:** propuestas "Tu mandas" vía ntfy.sh al móvil
+- **Alertas:** propuestas "Tu mandas" vía ntfy.sh (app instalada) + WhatsApp personal vía CallMeBot (ver `docs/alertas-propuestas.md`)
 
 ## Arrancar en local
 

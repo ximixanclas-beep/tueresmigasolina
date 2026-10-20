@@ -30,19 +30,11 @@ const faqs = [
   },
   {
     q: "¿Cómo propongo una ruta para Tu mandas?",
-    a: "Rellena el formulario de la home con el nombre de la carretera, tu contacto y por qué merece un vídeo. Si la elegimos, te contactamos para rodarla juntos y publicarla con tu nombre.",
-  },
-  {
-    q: "¿Puedo publicar mi propia ruta?",
-    a: "Sí. En la sección Publicar ruta puedes subir tu GPX y rellenar los datos. Las rutas pasan por revisión antes de aparecer públicamente.",
+    a: "Rellena el formulario de la home indicando el lugar de inicio, los días de la ruta y tu contacto. Las rutas son siempre de fin de semana, salvo puentes por festivo nacional (Día de la Hispanidad, la Pilarica, Navidades…). Si la elegimos, te contactamos para rodarla juntos y publicarla con tu nombre.",
   },
   {
     q: "¿Qué apps funcionan con estos GPX?",
     a: "Cualquier app que lea GPX: Calimoto, Kurviger, OsmAnd, Google Earth, Garmin BaseCamp, TomTom MyDrive, Wikiloc y navegadores de moto con soporte GPX.",
-  },
-  {
-    q: "¿Puedo usar las rutas comercialmente?",
-    a: "No. El contenido está bajo licencia CC BY-NC 4.0: uso personal y no comercial. Si quieres uso comercial, contáctanos por el canal.",
   },
   {
     q: "¿Cada ruta tiene vídeo en YouTube?",

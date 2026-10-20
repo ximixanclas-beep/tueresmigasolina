@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { sendPushToAll } from "@/lib/push";
+import { sendWhatsAppAlert } from "@/lib/whatsapp";
+import { sendSlackAlert } from "@/lib/slack";
+import { sendEmailAlert } from "@/lib/email";
 
 function badRequest(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
@@ -121,7 +124,46 @@ export async function POST(request: Request) {
     url: "/panel",
   });
 
-  return NextResponse.json({ ok: true });
+  const whatsappSent = await sendWhatsAppAlert(
+    [
+      "🏍️ *TU MANDAS - Nueva propuesta*",
+      `Nombre: ${name || "Sin nombre"}`,
+      `Contacto: ${contact}`,
+      `Ruta: ${route}`,
+      message ? `Mensaje: ${message}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  );
+
+  const slackSent = await sendSlackAlert({
+    title: "TU MANDAS - Nueva propuesta",
+    fields: [
+      { label: "Nombre", value: name || "Sin nombre" },
+      { label: "Contacto", value: contact },
+      { label: "Ruta", value: route },
+      ...(message ? [{ label: "Mensaje", value: message }] : []),
+    ],
+    url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://tueresmigasolina.vercel.app"}/panel`,
+  });
+
+  const emailSent = await sendEmailAlert({
+    subject: `Nueva propuesta: ${route}`,
+    fields: [
+      { label: "Nombre", value: name || "Sin nombre" },
+      { label: "Contacto", value: contact },
+      { label: "Ruta", value: route },
+      ...(message ? [{ label: "Mensaje", value: message }] : []),
+    ],
+    url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://tueresmigasolina.vercel.app"}/panel`,
+  });
+
+  return NextResponse.json({
+    ok: true,
+    whatsapp: whatsappSent,
+    slack: slackSent,
+    email: emailSent,
+  });
 }
 
 export async function GET(request: Request) {
