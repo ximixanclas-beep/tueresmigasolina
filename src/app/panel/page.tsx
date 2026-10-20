@@ -22,7 +22,6 @@ export default function PanelPage() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [autoTried, setAutoTried] = useState(false);
   const [notifyOn, setNotifyOn] = useState(false);
   const lastIdsRef = useRef<Set<string>>(new Set());
 
@@ -73,13 +72,6 @@ export default function PanelPage() {
     return () => clearInterval(interval);
   }, [unlocked, code, load]);
 
-  function tryAutoUnlock() {
-    if (!autoTried && code) {
-      setAutoTried(true);
-      load(code);
-    }
-  }
-
   async function enableNotifications() {
     if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
     const perm = await Notification.requestPermission();
@@ -125,34 +117,32 @@ export default function PanelPage() {
       </p>
 
       {!unlocked && (
-        <form onSubmit={onSubmit} className="panel" style={{ marginTop: "1rem", maxWidth: "28rem" }}>
+        <form onSubmit={onSubmit} className="panel" style={{ marginTop: "1rem", maxWidth: "32rem" }}>
+          <p style={{ color: "var(--muted)", marginBottom: "0.8rem" }}>
+            Introduce el código de administrador que te dio el sistema. Es una cadena
+            larga de letras y números.
+          </p>
           <div className="field">
             <label htmlFor="admin-code">Código de administrador</label>
             <input
               id="admin-code"
-              type="password"
+              type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="ADMIN_CODE"
+              placeholder="Pega aquí el código"
               required
               autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              style={{ fontFamily: "monospace", fontSize: "0.95rem" }}
             />
           </div>
           {error && <p style={{ color: "#ff6b6b" }}>{error}</p>}
           <div className="actions">
             <button className="btn primary" type="submit" disabled={loading}>
-              {loading ? "Abriendo..." : "Entrar"}
+              {loading ? "Abriendo..." : "Entrar al panel"}
             </button>
-            {code && !autoTried && (
-              <button
-                className="btn ghost"
-                type="button"
-                onClick={tryAutoUnlock}
-                disabled={loading}
-              >
-                Entrar con código guardado
-              </button>
-            )}
           </div>
         </form>
       )}
@@ -180,7 +170,6 @@ export default function PanelPage() {
                 setUnlocked(false);
                 setProposals([]);
                 setCode("");
-                setAutoTried(false);
               }}
             >
               Cerrar sesión
