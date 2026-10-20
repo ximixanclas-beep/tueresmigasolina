@@ -95,9 +95,11 @@ export async function POST(request: Request) {
         await fetch(webhook, {
           method: "POST",
           headers: {
-            Title: "TU MANDAS - Nueva propuesta",
+            Title: `TU MANDAS: ${route}`,
             Priority: "high",
             Tags: "motorcycle,mega",
+            Click: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://tueresmigasolina.vercel.app"}/panel`,
+            Actions: `view, Abrir panel, ${process.env.NEXT_PUBLIC_SITE_URL ?? "https://tueresmigasolina.vercel.app"}/panel`,
           },
           body: text,
         });
