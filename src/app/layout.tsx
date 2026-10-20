@@ -5,7 +5,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import InstallPWA from "@/components/InstallPWA";
-import { siteUrl, toJsonLd, youtubeUrl } from "@/lib/seo";
+import { siteUrl, toJsonLd, whatsappChannelUrl, youtubeUrl } from "@/lib/seo";
 
 const channelName = process.env.NEXT_PUBLIC_CHANNEL_NAME ?? "Tueresmigasolina";
 
@@ -85,7 +85,7 @@ const siteJsonLd = {
       "@id": `${siteUrl}/#canal`,
       name: channelName,
       url: youtubeUrl,
-      sameAs: [youtubeUrl],
+            sameAs: [youtubeUrl, whatsappChannelUrl],
       description:
         "Canal de rutas en moto: carreteras con curvas, puertos de montaña y trackes GPX.",
     },
@@ -115,7 +115,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/faq">FAQ</Link>
               <Link href="/sobre">Sobre</Link>
               <a href={youtubeUrl} rel="me noopener" target="_blank">
-                Canal de YouTube
+                YouTube
+              </a>
+              <a href={whatsappChannelUrl} rel="me noopener" target="_blank">
+                WhatsApp
               </a>
               <Link href="/nueva">Publicar ruta</Link>
               <a href="/sitemap.xml">Sitemap</a>

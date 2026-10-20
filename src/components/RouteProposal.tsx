@@ -6,6 +6,9 @@ const email = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "";
 const whatsapp = process.env.NEXT_PUBLIC_WHATSAPP ?? "";
 const youtubeUrl =
   process.env.NEXT_PUBLIC_YOUTUBE_URL ?? "https://www.youtube.com/@Tueresmigasolina";
+const whatsappChannelUrl =
+  process.env.NEXT_PUBLIC_WHATSAPP_CHANNEL ??
+  "https://whatsapp.com/channel/@Tueresmigasolina";
 
 export default function RouteProposal() {
   const [name, setName] = useState("");
@@ -64,10 +67,29 @@ export default function RouteProposal() {
         <h3>¿Cómo funciona?</h3>
         <ul>
           <li>Cuéntame la carretera, el punto de salida y por qué merece un vídeo.</li>
-          <li>Me quedo con tu contacto y te aviso cuando sea el momento idóneo.</li>
+          <li>Tu contacto es privado: solo lo uso yo para responderte.</li>
           <li>La rodamos juntos y la publico aquí y en el canal con tu nombre.</li>
           <li>Apareces como protagonista en la sección <strong>&ldquo;Tu mandas&rdquo;</strong>.</li>
         </ul>
+
+        <div className="panel" style={{ marginTop: "1rem", padding: "1rem 1.2rem" }}>
+          <strong style={{ display: "block", marginBottom: "0.4rem" }}>
+            ¿Prefieres el chat?
+          </strong>
+          <p style={{ color: "var(--muted)", marginBottom: "0.7rem", fontSize: "0.95rem" }}>
+            Sigue el canal de WhatsApp y escríbeme por privado. Es la vía más directa y
+            sin formularios.
+          </p>
+          <a
+            className="btn ghost"
+            href={whatsappChannelUrl}
+            target="_blank"
+            rel="noopener"
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+          >
+            <span aria-hidden="true">💬</span> Abrir canal de WhatsApp
+          </a>
+        </div>
       </div>
 
       <form className="form panel" onSubmit={onSubmit}>
@@ -87,9 +109,13 @@ export default function RouteProposal() {
               id="prop-contact"
               value={contact}
               onChange={(event) => setContact(event.target.value)}
-              placeholder="Email, teléfono o @usuario"
+              placeholder="Email, WhatsApp o @usuario"
               required
+              autoComplete="off"
             />
+            <small style={{ color: "var(--muted)", display: "block", marginTop: "0.25rem" }}>
+              Privado: solo lo veo yo para responderte. No se publica en ningún sitio.
+            </small>
           </div>
         </div>
 
@@ -126,8 +152,16 @@ export default function RouteProposal() {
               <>
                 ¡Recibido! Mándame la propuesta para que me llegue tu contacto:
                 <div className="actions" style={{ marginTop: "0.6rem" }}>
+                  <a
+                    className="btn primary"
+                    href={whatsappChannelUrl}
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Escribir por WhatsApp
+                  </a>
                   {email && (
-                    <a className="btn primary" href={mailto}>
+                    <a className="btn ghost" href={mailto}>
                       Enviar por email
                     </a>
                   )}
@@ -138,16 +172,16 @@ export default function RouteProposal() {
                       target="_blank"
                       rel="noopener"
                     >
-                      Enviar por WhatsApp
+                      WhatsApp directo
                     </a>
                   )}
                   <a className="btn ghost" href={youtubeUrl} target="_blank" rel="noopener">
-                    Comentario en el canal
+                    Comentario en YouTube
                   </a>
                 </div>
                 {!email && !whatsappUrl && (
                   <p style={{ marginTop: "0.6rem" }}>
-                    Escríbeme por el canal de YouTube con estos datos y te contacto en
+                    Escríbeme por el canal de WhatsApp con estos datos y te contacto en
                     cuanto pueda.
                   </p>
                 )}
