@@ -1,4 +1,4 @@
-const CACHE = "migasolina-v1";
+const CACHE = "migasolina-v2";
 const SHELL = ["/", "/rutas", "/manifest.webmanifest", "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
@@ -15,6 +15,41 @@ self.addEventListener("activate", (event) => {
         Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))),
       )
       .then(() => self.clients.claim()),
+  );
+});
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  let data = { title: "Tueresmigasolina", body: "Nueva propuesta", url: "/panel" };
+  try {
+    data = { ...data, ...event.data.json() };
+  } catch {
+    data.body = event.data.text() || data.body;
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon || "/icons/icon-192.png",
+      badge: data.badge || "/icons/icon-192.png",
+      data: { url: data.url || "/panel" },
+      vibrate: [100, 50, 100],
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/panel";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return clients.openWindow(url);
+    }),
   );
 });
 

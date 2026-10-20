@@ -81,15 +81,33 @@ export default function PanelPage() {
   }
 
   async function enableNotifications() {
-    if (!("Notification" in window)) return;
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
     const perm = await Notification.requestPermission();
-    setNotifyOn(perm === "granted");
-    if (perm === "granted") {
-      new Notification("Tueresmigasolina", {
-        body: "Alertas activadas. Te avisaré de cada propuesta nueva.",
-        icon: "/icons/icon-192.png",
-      });
-    }
+    if (perm !== "granted") return;
+
+    const reg = await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+
+    const keyRes = await fetch("/api/push");
+    const { publicKey } = (await keyRes.json()) as { publicKey: string };
+    if (!publicKey) return;
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: publicKey,
+    });
+
+    await fetch("/api/push", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(sub.toJSON()),
+    });
+
+    setNotifyOn(true);
+    new Notification("Tueresmigasolina", {
+      body: "Alertas activadas en este dispositivo. Te avisaré de cada propuesta.",
+      icon: "/icons/icon-192.png",
+    });
   }
 
   function onSubmit(e: React.FormEvent) {

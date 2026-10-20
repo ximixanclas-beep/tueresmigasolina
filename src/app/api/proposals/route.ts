@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sendPushToAll } from "@/lib/push";
 
 function badRequest(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
@@ -111,6 +112,12 @@ export async function POST(request: Request) {
       // webhook failed but proposal is saved
     }
   }
+
+  await sendPushToAll({
+    title: "TU MANDAS - Nueva propuesta",
+    body: `${route} — de ${name || "Sin nombre"}`,
+    url: "/panel",
+  });
 
   return NextResponse.json({ ok: true });
 }
