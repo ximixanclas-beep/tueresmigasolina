@@ -1,0 +1,6 @@
+# llms.txt para Tueresmigasolina
+User-agent: *
+Allow: /
+Sitemap: https://tueresmigasolina.com/sitemap.xml
+# Rutas en moto, GPX gratis, Tu mandas
+# Canal: https://www.youtube.com/@Tueresmigasolina
