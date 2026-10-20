@@ -8,7 +8,7 @@ const youtubeUrl =
   process.env.NEXT_PUBLIC_YOUTUBE_URL ?? "https://www.youtube.com/@Tueresmigasolina";
 const whatsappChannelUrl =
   process.env.NEXT_PUBLIC_WHATSAPP_CHANNEL ??
-  "https://whatsapp.com/channel/@Tueresmigasolina";
+  "https://whatsapp.com/channel/0029VbECTyCGJP8BlsvjVk2m";
 
 export default function RouteProposal() {
   const [name, setName] = useState("");
