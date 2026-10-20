@@ -8,6 +8,44 @@ function asString(value: unknown, max: number): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+async function saveToGist(entry: Record<string, unknown>): Promise<void> {
+  const token = process.env.GITHUB_TOKEN;
+  const gistId = process.env.PROPOSALS_GIST_ID;
+  if (!token || !gistId) return;
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+
+  const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers });
+  if (!res.ok) return;
+  const gist = (await res.json()) as {
+    files: Record<string, { content: string; filename: string }>;
+  };
+  const fileKey = Object.keys(gist.files)[0];
+  if (!fileKey) return;
+
+  let list: unknown[] = [];
+  try {
+    const parsed = JSON.parse(gist.files[fileKey].content);
+    if (Array.isArray(parsed)) list = parsed;
+  } catch {
+    list = [];
+  }
+  list.unshift(entry);
+  const content = JSON.stringify(list.slice(0, 500), null, 2);
+
+  await fetch(`https://api.github.com/gists/${gistId}`, {
+    method: "PATCH",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      files: { [fileKey]: { content, filename: gist.files[fileKey].filename } },
+    }),
+  });
+}
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -37,44 +75,81 @@ export async function POST(request: Request) {
   ].filter(Boolean) as string[];
 
   const text = lines.join("\n");
-  const webhook = process.env.PROPOSALS_WEBHOOK_URL;
 
-  if (!webhook) {
-    return NextResponse.json({ ok: false, needsWebhook: true }, { status: 200 });
+  const entry = {
+    id: crypto.randomUUID(),
+    name,
+    contact,
+    route,
+    message,
+    receivedAt: new Date().toISOString(),
+  };
+
+  await saveToGist(entry);
+
+  const webhook = process.env.PROPOSALS_WEBHOOK_URL;
+  if (webhook) {
+    try {
+      if (webhook.includes("ntfy.sh")) {
+        await fetch(webhook, {
+          method: "POST",
+          headers: {
+            Title: "TU MANDAS - Nueva propuesta",
+            Priority: "high",
+            Tags: "motorcycle,mega",
+          },
+          body: text,
+        });
+      } else {
+        await fetch(webhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: `**TU MANDAS - Nueva propuesta**\n\n${text}` }),
+        });
+      }
+    } catch {
+      // webhook failed but proposal is saved
+    }
   }
 
+  return NextResponse.json({ ok: true });
+}
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code") ?? "";
+  const adminCode = process.env.ADMIN_CODE;
+  if (!adminCode || code !== adminCode) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+
+  const token = process.env.GITHUB_TOKEN;
+  const gistId = process.env.PROPOSALS_GIST_ID;
+  if (!token || !gistId) {
+    return NextResponse.json({ proposals: [] });
+  }
+
+  const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    return NextResponse.json({ proposals: [] });
+  }
+  const gist = (await res.json()) as {
+    files: Record<string, { content: string }>;
+  };
+  const fileKey = Object.keys(gist.files)[0];
+  if (!fileKey) return NextResponse.json({ proposals: [] });
+
   try {
-    let res: Response;
-
-    if (webhook.includes("ntfy.sh")) {
-      res = await fetch(webhook, {
-        method: "POST",
-        headers: {
-          Title: "TU MANDAS - Nueva propuesta",
-          Priority: "high",
-          Tags: "motorcycle,mega",
-        },
-        body: text,
-      });
-    } else {
-      const content = ["**TU MANDAS - Nueva propuesta**", text]
-        .join("\n\n")
-        .replace(/\n/g, "\n");
-      res = await fetch(webhook, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
-      });
-    }
-
-    if (!res.ok) {
-      return NextResponse.json({ ok: false, error: "Webhook error" }, { status: 502 });
-    }
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Error" },
-      { status: 500 },
-    );
+    const parsed = JSON.parse(gist.files[fileKey].content);
+    return NextResponse.json({ proposals: Array.isArray(parsed) ? parsed : [] });
+  } catch {
+    return NextResponse.json({ proposals: [] });
   }
 }

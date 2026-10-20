@@ -121,6 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 WhatsApp
               </a>
               <Link href="/nueva">Publicar ruta</Link>
+              <Link href="/panel">Panel</Link>
               <a href="/sitemap.xml">Sitemap</a>
             </div>
           </div>
