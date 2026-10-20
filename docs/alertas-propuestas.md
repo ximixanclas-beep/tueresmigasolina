@@ -1,26 +1,33 @@
-# Cómo enterarte de las propuestas de ruta (Tu mandas)
+# Cómo enterarte de las propuestas de ruta (Tu mandas) — ACTIVADO
 
-Ahora mismo el formulario guarda/envía por email/WhatsApp desde el navegador. Para que te llegue automáticamente sin tener que mirar la web:
+Las alertas ya están activas con **ntfy.sh** (gratis, instantáneo al móvil).
 
-## Opción 1: Email (recomendada, gratis)
-1. Copia `.env.example` a `.env.local`
-2. Añade:
-   ```
-   NEXT_PUBLIC_CONTACT_EMAIL=tu-email@gmail.com
-   ```
-3. Despliega en Vercel y añade la variable al proyecto. Al pulsar "Proponer mi ruta", se abrirá el cliente de correo con todos los datos.
+## Tu tema ntfy (privado)
 
-## Opción 2: Formspree (gratis, sin backend)
-1. Crear cuenta en https://formspree.io
-2. Crear formulario, copiar endpoint
-3. Puedo cambiar `RouteProposal.tsx` para enviar POST directo al endpoint y recibir email al instante sin abrir cliente de correo.
+```
+tueresmigasolina-dqupm4acy1er8vkw5hf7
+```
 
-## Opción 3: Webhook a Discord/Telegram (inmediato)
-1. Crear webhook de Discord o bot de Telegram
-2. Poner `PROPOSALS_WEBHOOK_URL` en `.env.local` + Vercel
-3. Crear `src/app/api/proposals/route.ts` para recibir y reenviar el webhook. Te llega notificación push al móvil en segundos.
+URL completa del webhook (ya configurada en Vercel):
+```
+https://ntfy.sh/tueresmigasolina-dqupm4acy1er8vkw5hf7
+```
 
-## Mi recomendación
-**Opción 3 (webhook)**: recibes notificación instantánea, sin depender del cliente de correo, funciona desde cualquier dispositivo.
+## Cómo recibir las notificaciones en el móvil
 
-Dime cuál quieres activar y configuro ahora mismo.
+1. Instala la app **ntfy**:
+   - Android: https://play.google.com/store/apps/details?id=io.heckel.ntfy
+   - iOS: https://apps.apple.com/app/ntfy/id1625396347
+2. Abre la app → **+** → **Subscribe to topic**
+3. Escribe exactamente: `tueresmigasolina-dqupm4acy1er8vkw5hf7`
+4. Listo. Cada vez que alguien proponga una ruta, te llegará una notificación al móvil al instante.
+
+## Alternativas (si prefieres)
+
+- **Discord:** crea un webhook en tu servidor y reemplaza `PROPOSALS_WEBHOOK_URL` en Vercel.
+- **Email:** añade `NEXT_PUBLIC_CONTACT_EMAIL` en Vercel; el formulario ofrecerá enviar por correo.
+
+## Seguridad
+
+- No compartas el enlace del tema: cualquiera que lo tenga puede enviarte notificaciones o leerlas si se suscribe.
+- Si lo compartes por error, puedes crear otro tema gratis en https://ntfy.sh y actualizar la variable en Vercel.

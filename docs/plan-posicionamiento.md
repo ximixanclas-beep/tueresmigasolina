@@ -55,6 +55,10 @@ Semana 4: recopilatorio 'Mejores curvas...' + 7 Shorts
 - [x] PWA
 - [x] SEO (sitemap/robots/json-ld)
 - [x] 'Tu mandas' con formulario
-- [ ] Incrustar vídeo en ficha
-- [ ] Dominio propio + HTTPS
-- [ ] Search Console + Analytics
+- [x] Incrustar vídeo en ficha
+- [x] Páginas SEO: /faq, /guias, /sobre
+- [x] Analytics + Speed Insights (Vercel)
+- [x] Alertas ntfy al móvil
+- [x] Desplegado en https://tueresmigasolina.vercel.app
+- [ ] Dominio propio + HTTPS (tueresmigasolina.com)
+- [ ] Search Console + enviar sitemap
