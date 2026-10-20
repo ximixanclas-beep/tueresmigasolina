@@ -13,6 +13,9 @@ export default function SiteHeader() {
         </Link>
         <nav className="nav" aria-label="Principal">
           <Link href="/rutas">Rutas</Link>
+          <Link href="/guias" className="hide-sm">
+            Guías
+          </Link>
           <Link href="/nueva" className="hide-sm">
             Publicar
           </Link>

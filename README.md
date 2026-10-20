@@ -2,10 +2,12 @@
 
 Web app instalable (PWA) para publicar y compartir rutas en moto con mapa, datos del track y descarga en GPX.
 
+- **En vivo:** https://tueresmigasolina.vercel.app
 - **Stack:** Next.js 16 (App Router) + TypeScript + Leaflet/OpenStreetMap
 - **Datos:** Supabase (producción) o archivo local `.data/routes.json` (desarrollo)
 - **SEO:** metadata dinámica, sitemap, robots, JSON-LD, Open Graph e imagen OG generada
 - **PWA:** manifest, service worker, instalación desde el navegador
+- **Alertas:** propuestas "Tu mandas" vía ntfy.sh al móvil
 
 ## Arrancar en local
 

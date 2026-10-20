@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import InstallPWA from "@/components/InstallPWA";
+import { siteUrl, toJsonLd, youtubeUrl } from "@/lib/seo";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const channelName = process.env.NEXT_PUBLIC_CHANNEL_NAME ?? "Tueresmigasolina";
-const youtubeUrl =
-  process.env.NEXT_PUBLIC_YOUTUBE_URL ?? "https://www.youtube.com/@Tueresmigasolina";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -67,10 +67,39 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const siteJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: channelName,
+      alternateName: "Tu eres mi gasolina",
+      url: siteUrl,
+      inLanguage: "es",
+      description:
+        "Rutas en moto con mapa, track GPX descargable y las mejores carreteras con curvas.",
+      publisher: { "@id": `${siteUrl}/#canal` },
+    },
+    {
+      "@type": "Person",
+      "@id": `${siteUrl}/#canal`,
+      name: channelName,
+      url: youtubeUrl,
+      sameAs: [youtubeUrl],
+      description:
+        "Canal de rutas en moto: carreteras con curvas, puertos de montaña y trackes GPX.",
+    },
+  ],
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: toJsonLd(siteJsonLd) }}
+        />
         <SiteHeader />
         <main>{children}</main>
         <footer className="site-footer">
@@ -82,6 +111,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             <div className="footer-links">
               <Link href="/rutas">Todas las rutas</Link>
+              <Link href="/guias">Guías</Link>
+              <Link href="/faq">FAQ</Link>
+              <Link href="/sobre">Sobre</Link>
               <a href={youtubeUrl} rel="me noopener" target="_blank">
                 Canal de YouTube
               </a>
@@ -91,6 +123,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </footer>
         <InstallPWA />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

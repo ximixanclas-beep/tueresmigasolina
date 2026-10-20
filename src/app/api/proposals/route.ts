@@ -29,28 +29,44 @@ export async function POST(request: Request) {
   if (!contact) return badRequest("El contacto es obligatorio.");
   if (!route) return badRequest("La ruta propuesta es obligatoria.");
 
+  const lines = [
+    `Nombre: ${name || "Sin nombre"}`,
+    `Contacto: ${contact}`,
+    `Ruta: ${route}`,
+    message ? `Mensaje: ${message}` : null,
+  ].filter(Boolean) as string[];
+
+  const text = lines.join("\n");
   const webhook = process.env.PROPOSALS_WEBHOOK_URL;
+
   if (!webhook) {
     return NextResponse.json({ ok: false, needsWebhook: true }, { status: 200 });
   }
 
-  const content = [
-    "**TU MANDAS - Nueva propuesta**",
-    `**Nombre:** ${name || "Sin nombre"}`,
-    `**Contacto:** ${contact}`,
-    `**Ruta:** ${route}`,
-    message ? `**Mensaje:**\n${message}` : null,
-    `**Web:** ${process.env.NEXT_PUBLIC_SITE_URL ?? ""}`,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
-
   try {
-    const res = await fetch(webhook, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
-    });
+    let res: Response;
+
+    if (webhook.includes("ntfy.sh")) {
+      res = await fetch(webhook, {
+        method: "POST",
+        headers: {
+          Title: "TU MANDAS - Nueva propuesta",
+          Priority: "high",
+          Tags: "motorcycle,mega",
+        },
+        body: text,
+      });
+    } else {
+      const content = ["**TU MANDAS - Nueva propuesta**", text]
+        .join("\n\n")
+        .replace(/\n/g, "\n");
+      res = await fetch(webhook, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+    }
+
     if (!res.ok) {
       return NextResponse.json({ ok: false, error: "Webhook error" }, { status: 502 });
     }
