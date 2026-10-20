@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Proposal = {
   id: string;
@@ -23,31 +23,72 @@ export default function PanelPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [autoTried, setAutoTried] = useState(false);
+  const [notifyOn, setNotifyOn] = useState(false);
+  const lastIdsRef = useRef<Set<string>>(new Set());
 
-  const load = useCallback(async (adminCode: string) => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch(`/api/proposals?code=${encodeURIComponent(adminCode)}`);
-      if (res.status === 401) {
-        setError("Código incorrecto.");
-        setUnlocked(false);
-        return;
+  const load = useCallback(
+    async (adminCode: string, silent = false) => {
+      if (!silent) setLoading(true);
+      setError("");
+      try {
+        const res = await fetch(`/api/proposals?code=${encodeURIComponent(adminCode)}`);
+        if (res.status === 401) {
+          setError("Código incorrecto.");
+          setUnlocked(false);
+          return;
+        }
+        const data = (await res.json()) as { proposals: Proposal[] };
+        const list = data.proposals ?? [];
+
+        if (silent && lastIdsRef.current.size > 0 && "Notification" in window) {
+          const fresh = list.filter((p) => !lastIdsRef.current.has(p.id));
+          if (fresh.length > 0 && Notification.permission === "granted") {
+            for (const p of fresh) {
+              new Notification("TU MANDAS - Nueva propuesta", {
+                body: `${p.route} — de ${p.name || "Sin nombre"}`,
+                icon: "/icons/icon-192.png",
+                tag: p.id,
+              });
+            }
+          }
+        }
+
+        lastIdsRef.current = new Set(list.map((p) => p.id));
+        setProposals(list);
+        setUnlocked(true);
+      } catch {
+        if (!silent) setError("Error al cargar. Inténtalo de nuevo.");
+      } finally {
+        if (!silent) setLoading(false);
       }
-      const data = (await res.json()) as { proposals: Proposal[] };
-      setProposals(data.proposals ?? []);
-      setUnlocked(true);
-    } catch {
-      setError("Error al cargar. Inténtalo de nuevo.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!unlocked || !code) return;
+    const interval = setInterval(() => {
+      load(code, true);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [unlocked, code, load]);
 
   function tryAutoUnlock() {
     if (!autoTried && code) {
       setAutoTried(true);
       load(code);
+    }
+  }
+
+  async function enableNotifications() {
+    if (!("Notification" in window)) return;
+    const perm = await Notification.requestPermission();
+    setNotifyOn(perm === "granted");
+    if (perm === "granted") {
+      new Notification("Tueresmigasolina", {
+        body: "Alertas activadas. Te avisaré de cada propuesta nueva.",
+        icon: "/icons/icon-192.png",
+      });
     }
   }
 
@@ -61,7 +102,8 @@ export default function PanelPage() {
     <div className="container section">
       <h1>Panel de propuestas</h1>
       <p style={{ color: "var(--muted)" }}>
-        Acceso privado para ver todas las propuestas de Tu mandas.
+        Acceso privado para ver todas las propuestas de Tu mandas. Se actualiza solo cada
+        15 segundos.
       </p>
 
       {!unlocked && (
@@ -99,10 +141,20 @@ export default function PanelPage() {
 
       {unlocked && (
         <>
-          <div className="actions" style={{ marginTop: "1rem" }}>
+          <div className="actions" style={{ marginTop: "1rem", flexWrap: "wrap" }}>
             <button className="btn ghost" onClick={() => load(code)} disabled={loading}>
-              {loading ? "Actualizando..." : "Actualizar"}
+              {loading ? "Actualizando..." : "Actualizar ahora"}
             </button>
+            {!notifyOn && "Notification" in window && Notification.permission !== "granted" && (
+              <button className="btn primary" onClick={enableNotifications}>
+                Activar alertas en este dispositivo
+              </button>
+            )}
+            {notifyOn && (
+              <span className="chip accent" style={{ alignSelf: "center" }}>
+                Alertas activas
+              </span>
+            )}
             <button
               className="btn ghost"
               onClick={() => {
